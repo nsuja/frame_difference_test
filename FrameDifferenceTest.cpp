@@ -24,15 +24,47 @@ std::ostream& operator<<( std::ostream& o, const myfillandw& a )
 int main(int argc, char **argv)
 {
 	auto frame_counter = 1;
+	int debug_mode = 1;
+	int found_algo = 0;
 
-	IBGS *bgs;
-	bgs = new FrameDifference;
+	if(argc != 4 && argc != 5) {
+		std::cout << "Invalid arguments: " <<argc <<" argv[0]:" <<argv[0] << std::endl;
+		exit(1);
+	}
+
+	if(argc == 5 && strcmp(argv[4], "--debug")) {
+		std::cout << "Debug mode: ON " << std::endl;
+		debug_mode = 0;
+	}
+
+	auto algorithmsName = BGS_Factory::Instance()->GetRegisteredAlgorithmsName();
+	std::string algo;
+	for (const std::string& algorithmName : algorithmsName) {
+		if(algorithmName == argv[3]) {
+			algo = algorithmName;
+			found_algo = 1;
+			break;
+		}
+	}
+	if(!found_algo) {
+		std::cout << "Invalid arguments: " <<argv[3] <<" not found" << std::endl;
+		exit(1);
+	}
+	std::cout << "Running " << algo << std::endl;
+	auto bgs = BGS_Factory::Instance()->Create(algo);
+
+	std::string input_path = argv[1];
+	std::string output_path = argv[2];
+
+//	IBGS *bgs;
+//	bgs = new FrameDifference;
 
 	while(1) {
 		std::stringstream ss;
 		ss << myfillandw('0',6) <<frame_counter;
-		std::string fileName = "/home/ubuntu/datasets/CD2014/dataset/baseline/highway/input/in" + ss.str() + ".jpg";
-		std::cout << "reading: " << fileName << std::endl;
+		std::string fileName = input_path + "/input/in" + ss.str() + ".jpg";
+		//if(!debug_mode)
+			//std::cout << "reading: " << fileName << std::endl;
 		frame_counter++;
 
 		cv::Mat img_input = cv::imread(fileName, CV_LOAD_IMAGE_COLOR);
@@ -42,25 +74,32 @@ int main(int argc, char **argv)
 			break;
 		}
 
-//		cv::imshow("input", img_input);
-//
-//		cv::Mat img_mask;
-//		cv::Mat img_bkgmodel;
-//
-//		// by default, it shows automatically the foreground mask image
-//		bgs->process(img_input, img_mask, img_bkgmodel);
-//
-//		//if(!img_mask.empty())
-//		//  cv::imshow("Foreground", img_mask);
-//		//  do something
-//
-//		if(cvWaitKey(33) >= 0)
-//			break;
+		if(!debug_mode)
+			cv::imshow("input", img_input);
+
+		cv::Mat img_mask;
+		cv::Mat img_bkgmodel;
+
+		bgs->process(img_input, img_mask, img_bkgmodel);
+
+		if(!img_mask.empty()) {
+			if(!debug_mode)
+				cv::imshow("Foreground", img_mask);
+			std::string outFileName = output_path + "/bin" + ss.str() + ".jpg";
+			cv::imwrite(outFileName, img_mask);
+		} else {
+			std::cout << "No hay mascara: " << fileName << std::endl;
+		}
+
+		if(!debug_mode)
+			cvWaitKey(0);
 	}
 
-	delete bgs;
+	//XXX TODO FIXME Check how to free 
+//	delete bgs;
 
-	cvDestroyAllWindows();
+	if(!debug_mode)
+		cvDestroyAllWindows();
 
 	return 0;
 }
