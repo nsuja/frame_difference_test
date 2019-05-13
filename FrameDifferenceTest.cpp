@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cv.h>
 #include <highgui.h>
+#include <pthread.h>
 
 #include "./package_bgs/FrameDifference.h"
 
@@ -56,9 +57,6 @@ int main(int argc, char **argv)
 	std::string input_path = argv[1];
 	std::string output_path = argv[2];
 
-//	IBGS *bgs;
-//	bgs = new FrameDifference;
-
 	while(1) {
 		std::stringstream ss;
 		ss << myfillandw('0',6) <<frame_counter;
@@ -67,7 +65,7 @@ int main(int argc, char **argv)
 			//std::cout << "reading: " << fileName << std::endl;
 		frame_counter++;
 
-		cv::Mat img_input = cv::imread(fileName, CV_LOAD_IMAGE_COLOR);
+		cv::Mat img_input = cv::imread(fileName, CV_LOAD_IMAGE_GRAYSCALE);
 
 		if (img_input.empty()) {
 			std::cout << "No hay imagen: " << fileName << std::endl;
