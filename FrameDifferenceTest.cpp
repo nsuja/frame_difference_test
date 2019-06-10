@@ -38,10 +38,32 @@ int main(int argc, char **argv)
 		debug_mode = 0;
 	}
 
+	int img_channels = 1;
 	auto algorithmsName = BGS_Factory::Instance()->GetRegisteredAlgorithmsName();
 	std::string algo;
 	for (const std::string& algorithmName : algorithmsName) {
 		if(algorithmName == argv[3]) {
+			if(algorithmName == "IndependentMultimodal" || algorithmName == "T2FMRF_UM" || algorithmName == "LBSimpleGaussian" || algorithmName == "FuzzySugenoIntegral"
+					|| algorithmName == "DPWrenGA"
+					|| algorithmName == "LBAdaptiveSOM"
+					|| algorithmName == "Amber"
+					|| algorithmName == "MixtureOfGaussianV2"
+					|| algorithmName == "LBFuzzyAdaptiveSOM"
+					|| algorithmName == "LBMixtureOfGaussians"
+					|| algorithmName == "DPEigenbackground"
+					|| algorithmName == "LBFuzzyGaussian"
+					|| algorithmName == "FuzzyChoquetIntegral"
+					|| algorithmName == "VuMeter"
+					|| algorithmName == "T2FMRF_UV"
+					|| algorithmName == "MultiCue"
+					|| algorithmName == "TwoPoints"
+					|| algorithmName == "MultiLayer"
+					|| algorithmName == "DPTexture"
+					|| algorithmName == "ViBe"
+					|| algorithmName == "PAWCS"
+					|| algorithmName == "SuBSENSE"
+					)
+				img_channels = 3;
 			algo = algorithmName;
 			found_algo = 1;
 			break;
@@ -56,6 +78,9 @@ int main(int argc, char **argv)
 
 	std::string input_path = argv[1];
 	std::string output_path = argv[2];
+	std::vector<int> compression_params;
+	compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
+	compression_params.push_back(60);
 
 	while(1) {
 		std::stringstream ss;
@@ -65,7 +90,7 @@ int main(int argc, char **argv)
 			//std::cout << "reading: " << fileName << std::endl;
 		frame_counter++;
 
-		cv::Mat img_input = cv::imread(fileName, CV_LOAD_IMAGE_GRAYSCALE);
+		cv::Mat img_input = cv::imread(fileName, img_channels == 1 ? CV_LOAD_IMAGE_GRAYSCALE : CV_LOAD_IMAGE_COLOR);
 
 		if (img_input.empty()) {
 			std::cout << "No hay imagen: " << fileName << std::endl;
@@ -83,7 +108,7 @@ int main(int argc, char **argv)
 		if(!img_mask.empty()) {
 			if(!debug_mode)
 				cv::imshow("Foreground", img_mask);
-			std::string outFileName = output_path + "/bin" + ss.str() + ".jpg";
+			std::string outFileName = output_path + "/bin" + ss.str() + ".png";
 			cv::imwrite(outFileName, img_mask);
 		} else {
 			std::cout << "No hay mascara: " << fileName << std::endl;
